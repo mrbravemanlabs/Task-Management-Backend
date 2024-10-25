@@ -2,7 +2,7 @@ import app from "./app.js";
 import { connectDatabase } from "./Database/database.js";
 import dotenv from "dotenv";
 dotenv.config();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 10000;
 connectDatabase()
     .then(() => {
         app.on("error", (error) => {
