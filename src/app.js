@@ -6,7 +6,6 @@ import  taskRoute from "./Router/taskRoute.js";
 import stepRoute from "./Router/stepRoute.js"
 
 const app = express();
-const port = process.env.PORT
 app.use(bodyParser.json())
 app.use(cors());
 app.use(express.json());
