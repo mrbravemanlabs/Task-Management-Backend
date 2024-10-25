@@ -7,7 +7,11 @@ import stepRoute from "./Router/stepRoute.js"
 
 const app = express();
 app.use(bodyParser.json())
-app.use(cors());
+app.use(cors(
+    {
+        origin:"https://mrbravemanlabs.github.io"
+    }
+));
 app.use(express.json());
 app.get("/api/v1/users", (req, res) => {
     console.log(req.params);
