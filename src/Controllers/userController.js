@@ -39,8 +39,8 @@ export const loginUser = async (req, res) => {
  */
 export const registerUser = async (req, res) => {
     try {
-        const { email, password, fullName, fileUrl } = req.body;
-        if (!email || !password || !fullName || !fileUrl?.imageUrl || !fileUrl?.imagePublicId) {
+        const { email, password, fullName, fileUrl,imagePublicId } = req.body;
+        if (!email || !password || !fullName || !fileUrl || !imagePublicId) {
             return handleErrorResponse(res, 400, "All credentials are required", "userCreated", false);
         }
 
@@ -54,8 +54,8 @@ export const registerUser = async (req, res) => {
             email,
             password: hashedPassword,
             fullName,
-            avatarImage: fileUrl.imageUrl || null,
-            imageId: fileUrl.imagePublicId || null
+            avatarImage:imageUrl || null,
+            imageId:imagePublicId || null
         });
 
         await newUser.save();
