@@ -23,6 +23,5 @@ export const toggleStepStatus = async (req,res) => {
 
     } catch (error) {
         return handleErrorResponse(res, 500, "Internal Server Error", "updatedStatus", false);
-
     }
 }

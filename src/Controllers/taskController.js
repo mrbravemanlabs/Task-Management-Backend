@@ -9,10 +9,10 @@ export const addTask = async (req, res) => {
         if (!userid || !taskName) {
             return handleErrorResponse(res, 404, "userId and taskName are required", "taskAdded", false);
         }
-        
+
         const createdTask = new Task({ taskName, userId: userid });
         const savedTask = await createdTask.save();
-        
+
         const stepsPromise = tasksSteps.map(async (step) => {
             const newStep = new Step({
                 taskId: savedTask._id,
@@ -63,18 +63,34 @@ export const getAllTasks = async (req, res) => {
 // Delete a task
 export const deleteTask = async (req, res) => {
     const { taskId } = req.params;
-    console.log(taskId);
+
     if (!taskId) {
         return res.status(400).json({ message: "Task ID is required." });
     }
-    
+
     try {
+        // Delete all associated steps
+        const steps = await Step.find({ taskId });
+        const stepsPromise = steps.map(async (step) => {
+            const deletedStep = await Step.findByIdAndRemove(step._id);
+            return !!deletedStep; // Return true if deleted, false if not found
+        });
+        const deletedAllSteps = await Promise.all(stepsPromise);
+
+        // Log deletion status for each step
+        const allStepsDeleted = deletedAllSteps.every((status) => status);
+        if (!allStepsDeleted) {
+            return res.status(400).json({ message: "Can't Delte All The Steps" });
+        }
+
+        // Delete the task itself
         const deletedTask = await Task.findByIdAndDelete(taskId);
         if (!deletedTask) {
             return res.status(404).json({ message: "Task not found." });
         }
+
         return res.status(200).json({
-            message: "Task deleted successfully",
+            message: "Task and associated steps deleted successfully",
             taskId
         });
     } catch (error) {
@@ -87,26 +103,21 @@ export const deleteTask = async (req, res) => {
 export const toggleTaskStatus = async (req, res) => {
     const { taskId } = req.params;
     const { taskStatus } = req.body;
-    console.table({taskId,taskStatus});
+    console.table({ taskId, taskStatus });
     if (!taskStatus) {
         return handleErrorResponse(res, 400, "Please provide the task status", "taskStatusChanged", false);
     }
-
     try {
         const hasActiveTask = await Task.exists({ taskStatus: "Active" });
-        if (hasActiveTask  && taskStatus === "Active") {
-
+        if (hasActiveTask && taskStatus === "Active") {
             return handleErrorResponse(res, 400, "You already have an active task", "taskStatusChanged", false);
         }
-
         const task = await Task.findById(taskId);
         if (!task) {
             return handleErrorResponse(res, 404, "Cannot find the task with this ID", "taskStatusChanged", false);
         }
-
         task.taskStatus = taskStatus;
         await task.save();
-
         return res.status(200).json({
             message: "Task status updated successfully",
             taskStatusChanged: true
