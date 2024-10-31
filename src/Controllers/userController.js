@@ -30,6 +30,7 @@ export const loginUser = async (req, res) => {
             user: userWithoutPassword
         });
     } catch (error) {
+        console.error("Login error:", error);
         return handleErrorResponse(res, 500, "Internal server error", "userLoggedIn", false);
     }
 };
@@ -39,7 +40,7 @@ export const loginUser = async (req, res) => {
  */
 export const registerUser = async (req, res) => {
     try {
-        const { email, password, fullName, fileUrl,imagePublicId } = req.body;
+        const { email, password, fullName, fileUrl, imagePublicId } = req.body;
         if (!email || !password || !fullName || !fileUrl || !imagePublicId) {
             return handleErrorResponse(res, 400, "All credentials are required", "userCreated", false);
         }
@@ -49,13 +50,13 @@ export const registerUser = async (req, res) => {
             return handleErrorResponse(res, 400, "User already exists", "userCreated", false);
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 12);
         const newUser = new User({
             email,
             password: hashedPassword,
             fullName,
-            avatarImage:imageUrl || null,
-            imageId:imagePublicId || null
+            avatarImage: fileUrl,
+            imageId: imagePublicId
         });
 
         await newUser.save();
@@ -67,6 +68,7 @@ export const registerUser = async (req, res) => {
             user: userWithoutPassword
         });
     } catch (error) {
+        console.error("Registration error:", error);
         return handleErrorResponse(res, 500, "Internal server error", "userCreated", false);
     }
 };
@@ -92,6 +94,7 @@ export const getUser = async (req, res) => {
             user
         });
     } catch (error) {
+        console.error("Get user error:", error);
         return handleErrorResponse(res, 500, "Internal server error", "userFound", false);
     }
 };
@@ -123,6 +126,7 @@ export const resetPassword = async (req, res) => {
             sentOTP: true
         });
     } catch (error) {
+        console.error("Reset password error:", error);
         return handleErrorResponse(res, 500, "Internal server error", "userFound", false);
     }
 };
@@ -142,7 +146,7 @@ export const confirmPassword = async (req, res) => {
             return handleErrorResponse(res, 404, "User with this email doesn't exist", "changedPassword", false);
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
         user.password = hashedPassword;
         user.otp = "";
         user.otpExpiry = "";
@@ -153,90 +157,7 @@ export const confirmPassword = async (req, res) => {
             changedPassword: true
         });
     } catch (error) {
+        console.error("Confirm password error:", error);
         return handleErrorResponse(res, 500, "Internal server error", "changedPassword", false);
-    }
-};
-
-/**
- * Confirm OTP
- */
-export const confirmOTP = async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-        if (!email || !otp) {
-            return handleErrorResponse(res, 400, "Email and OTP are required", "validOTP", false);
-        }
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return handleErrorResponse(res, 404, "User with this email doesn't exist", "validOTP", false);
-        }
-
-        if (user.otp !== otp || user.otpExpiry < Date.now()) {
-            return handleErrorResponse(res, 400, "Invalid or expired OTP", "validOTP", false);
-        }
-
-        user.otp = "";
-        user.otpExpiry = "";
-        await user.save();
-
-        return res.status(200).json({
-            message: "OTP confirmed successfully",
-            validOTP: true
-        });
-    } catch (error) {
-        return handleErrorResponse(res, 500, "Internal server error", "validOTP", false);
-    }
-};
-
-/**
- * Change Avatar
- */
-export const changeAvatar = async (req, res) => {
-    try {
-        const { userId, avatarUrl } = req.body;
-        if (!userId || !avatarUrl) {
-            return handleErrorResponse(res, 400, "User ID and avatar URL are required", "changedAvatar", false);
-        }
-
-        const existedUser = await User.findById(userId);
-        if (!existedUser) {
-            return handleErrorResponse(res, 404, "User not found with this User ID", "changedAvatar", false);
-        }
-
-        existedUser.avatarImage = avatarUrl;
-        await existedUser.save();
-
-        return res.status(200).json({
-            message: "Avatar changed successfully",
-            changedAvatar: true
-        });
-    } catch (error) {
-        return handleErrorResponse(res, 500, "Internal server error", "changedAvatar", false);
-    }
-};
-
-/**
- * Get User's Image Public ID
- */
-export const imagePublicId = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        if (!userId) {
-            return handleErrorResponse(res, 400, "Please provide a User ID", "hasImagePublicId", false);
-        }
-
-        const existedUser = await User.findById(userId).select("imagePublicId");
-        if (!existedUser || !existedUser.imagePublicId) {
-            return handleErrorResponse(res, 404, "This user doesn't have an image Public ID", "hasImagePublicId", false);
-        }
-
-        return res.status(200).json({
-            message: "Here is your Public Image ID",
-            hasImagePublicId: true,
-            imagePublicId: existedUser.imagePublicId
-        });
-    } catch (error) {
-        return handleErrorResponse(res, 500, "Internal server error", "hasImagePublicId", false);
     }
 };
