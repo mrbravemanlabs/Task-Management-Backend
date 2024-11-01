@@ -40,17 +40,18 @@ export const loginUser = async (req, res) => {
  * User Registration
  */
 export const registerUser = async (req, res) => {
+    console.log("passed1");
     try {
         const { email, password, fullName, fileUrl, imagePublicId } = req.body;
         if (!email || !password || !fullName || !fileUrl || !imagePublicId) {
             return handleErrorResponse(res, 400, "All credentials are required", "userCreated", false);
         }
-
+        console.log("passed2");
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return handleErrorResponse(res, 400, "User already exists", "userCreated", false);
         }
-
+        console.log("passed3");
         const hashedPassword = await bcrypt.hash(password, 12);
         const newUser = new User({
             email,
@@ -59,10 +60,10 @@ export const registerUser = async (req, res) => {
             avatarImage: fileUrl,
             imageId: imagePublicId
         });
-
+        console.log("passed4");
         await newUser.save();
         const userWithoutPassword = await User.findById(newUser._id).select("-password");
-
+        console.log("passed5");
         return res.status(201).json({
             userCreated: true,
             message: "User registered successfully",
