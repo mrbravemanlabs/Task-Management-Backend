@@ -12,17 +12,17 @@ export const loginUser = async (req, res) => {
         if (!email || !password) {
             return handleErrorResponse(res, 400, "Email and password are required", "userLoggedIn", false);
         }
-
+        console.log("passed1");
         const user = await User.findOne({ email });
         if (!user) {
             return handleErrorResponse(res, 404, "User with this email not found", "userLoggedIn", false);
         }
-
+        console.log("passed2");
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return handleErrorResponse(res, 401, "Incorrect password", "userLoggedIn", false);
         }
-
+        console.log("passed3");
         const userWithoutPassword = await User.findById(user._id).select("-password");
         return res.status(200).json({
             userLoggedIn: true,
@@ -30,6 +30,7 @@ export const loginUser = async (req, res) => {
             user: userWithoutPassword
         });
     } catch (error) {
+        console.log("passed0");
         console.error("Login error:", error);
         return handleErrorResponse(res, 500, "Internal server error", "userLoggedIn", false);
     }

@@ -9,7 +9,9 @@ const app = express();
 app.use(bodyParser.json())
 app.use(cors(
     {
-        origin:"https://mrbravemanlabs.github.io"
+        // origin:"https://mrbravemanlabs.github.io"
+        // origin:"http://127.0.0.1:5500/index.html"
+        origin:"*",// for local development
     }
 ));
 app.use(express.json());
